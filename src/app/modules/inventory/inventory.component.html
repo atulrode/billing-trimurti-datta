@@ -1,0 +1,225 @@
+<div class="inventory container py-4">
+
+    <!-- Header -->
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1"><i class="fas fa-boxes me-2 text-primary"></i>Stock Management</h2>
+        <p class="text-muted">Manage your inventory and track stock levels</p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex flex-wrap gap-3 mb-4">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal"><i
+                class="fas fa-plus-circle me-1"></i>Add Item</button>
+
+        <button class="btn btn-outline-secondary"><i class="fas fa-file-import me-1"></i>Import CSV</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3" *ngFor="let stat of stats">
+            <div class="stat-card p-3 rounded bg-light shadow-sm">
+                <div class="stat-label text-muted"><i [class]="stat.icon + ' me-2 text-' + stat.color"></i>{{ stat.label
+                    }}</div>
+                <div class="stat-value fs-4 fw-bold text-{{ stat.color }}">{{ stat.value }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="row align-items-center mb-3">
+        <div class="col-md-6">
+            <input type="text" class="form-control" placeholder="Search items or suppliers..." [(ngModel)]="searchText">
+        </div>
+        <div class="col-md-6 mt-2 mt-md-0 text-end">
+            <div class="btn-group" role="group">
+                <button class="btn btn-outline-primary btn-sm" [class.active]="selectedCategory === 'All'"
+                    (click)="filterCategory('All')">All</button>
+                <button *ngFor="let cat of categories" class="btn btn-outline-primary btn-sm"
+                    [class.active]="selectedCategory === cat" (click)="filterCategory(cat)">{{ cat }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Stock</th>
+                    <th>Unit</th>
+                    <th>Cost Price</th>
+                    <th>Sale Price</th>
+                    <th>Supplier</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of filteredItems()" [ngClass]="{'table-warning': item.isLowStock}">
+                    <td>
+                        {{ item.name }}
+                        <div *ngIf="item.isLowStock" class="text-danger small">Low Stock</div>
+                    </td>
+                    <td>{{ item.category }}</td>
+                    <td>{{ item.stock }}/{{ item.min }}</td>
+                    <td>{{ item.unit }}</td>
+                    <td>₹{{ item.costPrice }}</td>
+                    <td>₹{{ item.salePrice }}</td>
+                    <td>{{ item.supplier }}</td>
+                    <td>
+                        <!-- <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></button> -->
+                        <!-- Edit button -->
+                        <button class="btn btn-sm btn-warning me-1" (click)="setEditItem(item)" data-bs-toggle="modal"
+                            data-bs-target="#editItemModal">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+
+
+                        <!-- Modal -->
+                        <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addItemModalLabel">Add New Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <form #itemForm="ngForm" (ngSubmit)="addItem(); addItemModalClose.click(); itemForm.resetForm();">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Item Name</label>
+                                <input type="text" class="form-control" required [(ngModel)]="newItem.name" name="name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" required [(ngModel)]="newItem.category" name="category">
+                                    <option disabled selected value="">Select Category</option>
+                                    <option>Pipes & Fittings</option>
+                                    <option>Cement & Construction</option>
+                                    <option>Electrical</option>
+                                    <option>Tools</option>
+                                    <option>Hardware</option>
+                                    <option>Paint & Chemicals</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Unit</label>
+                                <input type="text" class="form-control" required [(ngModel)]="newItem.unit" name="unit">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" class="form-control" required [(ngModel)]="newItem.quantity"
+                                    name="quantity" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Cost Price</label>
+                                <input type="number" class="form-control" required [(ngModel)]="newItem.costPrice"
+                                    name="costPrice" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sale Price</label>
+                                <input type="number" class="form-control" required [(ngModel)]="newItem.salePrice"
+                                    name="salePrice" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Supplier</label>
+                                <input type="text" class="form-control" required [(ngModel)]="newItem.supplier"
+                                    name="supplier">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Minimum Stock Level</label>
+                                <input type="number" class="form-control" required [(ngModel)]="newItem.minStock"
+                                    name="minStock" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            #addItemModalClose>Cancel</button>
+                        <button type="submit" class="btn btn-primary" [disabled]="!itemForm.form.valid">Add
+                            Item</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+    <!-- Edit Item Modal -->
+    <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editItemModalLabel">Edit Item</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeEditModal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <form>
+                        <!-- Item Name -->
+                        <div class="mb-3">
+                            <label class="form-label">Item Name</label>
+                            <input type="text" class="form-control" [(ngModel)]="selectedItem.name" name="name">
+                        </div>
+
+                        <!-- Category -->
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <input type="text" class="form-control" [(ngModel)]="selectedItem.category" name="category">
+                        </div>
+
+                        <!-- Stock -->
+                        <div class="mb-3">
+                            <label class="form-label">Stock</label>
+                            <input type="number" class="form-control" [(ngModel)]="selectedItem.stock" name="stock">
+                        </div>
+
+                        <!-- Minimum Stock -->
+                        <div class="mb-3">
+                            <label class="form-label">Minimum Stock</label>
+                            <input type="number" class="form-control" [(ngModel)]="selectedItem.min" name="min">
+                        </div>
+
+                        <!-- Cost Price -->
+                        <div class="mb-3">
+                            <label class="form-label">Cost Price</label>
+                            <input type="number" class="form-control" [(ngModel)]="selectedItem.costPrice"
+                                name="costPrice">
+                        </div>
+
+                        <!-- Sale Price -->
+                        <div class="mb-3">
+                            <label class="form-label">Sale Price</label>
+                            <input type="number" class="form-control" [(ngModel)]="selectedItem.salePrice"
+                                name="salePrice">
+                        </div>
+
+                        <!-- Supplier -->
+                        <div class="mb-3">
+                            <label class="form-label">Supplier</label>
+                            <input type="text" class="form-control" [(ngModel)]="selectedItem.supplier" name="supplier">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" (click)="updateItem()">Save Changes</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+</div>

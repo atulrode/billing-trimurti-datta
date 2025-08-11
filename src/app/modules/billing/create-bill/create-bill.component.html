@@ -1,0 +1,111 @@
+<div class="billing-container p-4">
+  <h3>Billing System</h3>
+  <p class="text-muted">Create invoices and manage sales transactions</p>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link active">Create Bill</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" routerLink="/billing/history">Bill History</a>
+    </li>
+  </ul>
+
+  <div class="row">
+    <!-- Left section -->
+    <div class="col-md-8">
+      <!-- Select Customer -->
+    <!-- Select Customer -->
+<div class="mb-3">
+  <label class="form-label">Select Customer</label>
+  <select
+    class="form-select"
+    [(ngModel)]="selectedCustomerId"
+    name="customer"
+    (ngModelChange)="onCustomerChange()"
+  >
+    <option [ngValue]="null">Walk-in Customer</option>
+    <option
+      *ngFor="let c of customerList"
+      [ngValue]="c.id"
+    >
+      {{ c.name }} - {{ c.phone }}
+    </option>
+  </select>
+</div>
+
+
+      <!-- Add Items -->
+    <!-- Add Items -->
+<div class="mb-3">
+  <label class="form-label">Add Items</label>
+  <div class="input-group mb-2">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Search and add items to bill"
+      [(ngModel)]="searchTerm"
+      (input)="filterItems()"
+    />
+    <button class="btn btn-outline-secondary" (click)="filterItems()">
+      <i class="fas fa-plus"></i>
+    </button>
+  </div>
+
+  <!-- Search Results -->
+  <div *ngIf="filteredItems.length > 0" class="list-group" style="max-height: 250px; overflow-y: auto;">
+    <a
+    *ngFor="let item of filteredItems"
+  class="list-group-item list-group-item-action d-flex justify-content-between align-items-start"
+  (click)="addItemToBill(item)"
+    >
+      <div>
+        <div class="fw-bold">{{ item.name }}</div>
+        ₹{{ item.price }} per {{ item.unit }}
+      </div>
+      <small class="text-muted">Stock: {{ item.stock }}</small>
+    </a>
+  </div>
+</div>
+
+
+      <!-- Payment Type -->
+      <div class="mb-3">
+        <label class="form-label">Payment Type</label>
+        <div>
+          <label class="me-3">
+            <input type="radio" [(ngModel)]="paymentType" value="cash" /> Cash
+          </label>
+          <label>
+            <input type="radio" [(ngModel)]="paymentType" value="credit" /> Credit (Udhari)
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right section - Bill Summary -->
+    <div class="col-md-4">
+      <div class="card p-3">
+        <h5>Bill Summary</h5>
+        <p>Bill No: <strong>{{ invoiceNo }}</strong></p>
+        <p>Date: {{ date | date: 'M/d/yyyy' }}</p>
+        <p>Customer: {{ getSelectedCustomerName() }}</p>
+
+        <!-- <p>Customer: {{ customerList?.find(c => c.id === selectedCustomerId)?.name || 'Walk-in' }}</p> -->
+        <hr />
+        <p>Subtotal: ₹{{ subtotal() | number: '1.2-2' }}</p>
+        <p>GST (18%): ₹{{ gstTotal() | number: '1.2-2' }}</p>
+        <h5>Total: ₹{{ total() | number: '1.2-2' }}</h5>
+        <div class="d-grid gap-2 mt-3">
+          <button class="btn btn-outline-primary" [disabled]="itemsInCart.length === 0" (click)="printInvoice()">
+            <i class="fas fa-print me-1"></i> Print Invoice
+          </button>
+          <button class="btn btn-success" [disabled]="itemsInCart.length === 0" (click)="saveBill()">
+            <i class="fas fa-save me-1"></i> Save Bill
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
